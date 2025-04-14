@@ -1,0 +1,36 @@
+# docker-compose.yml
+version: '3.8' # Specify compose file version
+
+services:
+  # Define the backend service (our FastAPI app)
+  backend:
+    # Tell Compose how to build the image for this service
+    build:
+      context: . # Use the Dockerfile in the current directory (.)
+      dockerfile: Dockerfile # Explicitly state the Dockerfile name
+    # Optional: Specify image name if you want to tag it
+    # image: fastapi-supabase-auth:latest
+    container_name: fastapi_supabase_backend # Give the container a specific name
+
+    # Inject environment variables from the .env file into the container
+    # Why? Securely provides configuration (like Supabase keys) to the running app
+    # without hardcoding them in the image or compose file.
+    env_file:
+      - .env
+
+    # Map ports: <host_port>:<container_port>
+    # Why? Allows you to access the application running inside the container
+    # via port 8000 on your host machine (localhost:8000).
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000 (where Uvicorn runs)
+
+    # Optional: Add volumes for development to sync code changes without rebuilding
+    # Uncomment the following lines for live code reloading during development:
+    # volumes:
+    #   - ./src:/app/src # Mount local src directory into container's /app/src
+    # command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload # Override CMD for reload
+
+# Optional: Define networks if you have multiple services needing to communicate
+# networks:
+#   default:
+#     driver: bridge
