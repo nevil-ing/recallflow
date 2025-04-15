@@ -3,7 +3,7 @@ import requests
 from functools import lru_cache
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError, ExpiredSignatureError, JWTClaimsError
+from jose import jwt, JWTError, ExpiredSignatureError
 from dotenv import load_dotenv
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
@@ -89,16 +89,13 @@ async def verify_token(token: HTTPAuthorizationCredentials = Depends(security_sc
                 break
 
         if not rsa_key:
-            # If key not found, maybe refresh JWKS cache once? Or just fail.
-            # implement refresh logic 
             print(f"Error: Public key with kid '{kid}' not found in JWKS.")
             raise JWTError(f"Public key with kid '{kid}' not found.")
 
-      
         payload = jwt.decode(
             jwt_token,
             rsa_key,
-            algorithms=["RS256"], # Supabase uses RS256
+            algorithms=["RS256"],
             audience=SUPABASE_AUDIENCE,
             issuer=SUPABASE_ISSUER,
         )
@@ -106,13 +103,10 @@ async def verify_token(token: HTTPAuthorizationCredentials = Depends(security_sc
 
     except ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
-    except JWTClaimsError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token claims invalid: {e}")
     except JWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token validation failed: {e}")
     except HTTPException as e:
-         # Re-raise HTTPExceptions from get_jwks()
-         raise e
+        raise e
     except Exception as e:
         print(f"Unexpected error during token validation: {e}")
         raise HTTPException(status_code=500, detail="Internal server error validating token")

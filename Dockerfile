@@ -1,15 +1,14 @@
 # Dockerfile
 
-# --- Stage 1: Build Stage ---
-# Use an official Python runtime as a parent image
+
 # Using slim-bullseye for a smaller image size
-FROM python:3.11-slim-bullseye as builder
+FROM python:3.13-slim-bullseye as builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     # Poetry settings:
     POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=false \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
     # Set path where Poetry installs packages inside the container
     POETRY_HOME="/opt/poetry" \
     # Set path for Poetry's cache
@@ -36,16 +35,16 @@ COPY pyproject.toml poetry.lock ./
 # Why --no-root? Don't install the project package itself yet.
 # Why --no-dev? Exclude development dependencies (like pytest) for a smaller production image.
 # Why --sync? Ensures the environment exactly matches the lock file, removing unused deps.
-RUN poetry install --no-root --no-dev --sync
+RUN poetry install --no-root --sync
 
 # --- Stage 2: Runtime Stage ---
 # Use a fresh slim image for the final runtime environment
-FROM python:3.11-slim-bullseye as runtime
+FROM python:3.13-slim-bullseye as runtime
 
 # Set environment variables (can be overridden by docker-compose)
 ENV PYTHONUNBUFFERED=1 \
     # Set the path where packages were installed by Poetry in the builder stage
-    PYTHONPATH="/app/.venv/lib/python3.11/site-packages" \
+    PYTHONPATH="/app/.venv/lib/python3.13/site-packages" \
     # Add Poetry's venv bin to PATH if needed, though we use absolute path in CMD
     PATH="/app/.venv/bin:$PATH" \
     # Set default host and port (can be overridden)
@@ -78,4 +77,4 @@ EXPOSE ${APP_PORT}
 # Why poetry run? Although we copied the venv, using `poetry run` is explicit.
 # Alternative CMD using direct python path from copied venv:
 # CMD ["/app/.venv/bin/uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD ["uvicorn", "src.main:app", "--host", "${APP_HOST}", "--port", "${APP_PORT}"]
+CMD uvicorn src.main:app --host ${APP_HOST} --port ${APP_PORT}
