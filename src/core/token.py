@@ -27,8 +27,8 @@ if not all([SUPABASE_URL, SUPABASE_JWKS_URL, SUPABASE_AUDIENCE, SUPABASE_ISSUER]
 def get_jwks():
     """ Fetches Supabase JWKS, caching the result. """
     try:
-        response = requests.get(SUPABASE_JWKS_URL, timeout=10) # Increased timeout slightly
-        response.raise_for_status() # Error for bad status codes
+        response = requests.get(SUPABASE_JWKS_URL, timeout=10) 
+        response.raise_for_status() 
         return response.json()
     except requests.exceptions.Timeout:
         print(f"Error: Timeout fetching JWKS from {SUPABASE_JWKS_URL}")
@@ -50,7 +50,7 @@ def get_jwks():
         )
         
         
-#--- Token Verification ----
+#--Token Verification
 security_scheme = HTTPBearer()
 
 async def verify_token(token: HTTPAuthorizationCredentials = Depends(security_scheme)) -> dict:
